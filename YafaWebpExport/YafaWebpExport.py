@@ -20,21 +20,26 @@ def prcedure_runner(procedure, inputs):
     procedure.run(config)
 
 def export_webp_run(procedure, run_mode, image, drawables, config, data):
-    
-    # Always append ".webp" to the file path
-    file_path = config.get_property('file-path')
-    
+    # Try to get the file path from the active image
+    gfile = image.get_file()
+    if gfile:
+        file_path = gfile.get_path()
+    else:
+        # If the image does not have an associated file, provide a default path
+        file_path = "/tmp/untitled_image"
+
     # Debug: Print the file path to GIMP's error console
     Gimp.message(f"File path: {file_path}")
-    
-    if not file_path:
-        raise ValueError("The 'file-path' property is empty or not set.")
+
+    # Always append ".webp" to the file path
     file_path += ".webp"
+
     # Convert the file path to a GFile object
     gfile = Gio.File.new_for_path(file_path)
+
     # Prepare procedures to call
     file_webp_export = Gimp.get_pdb().lookup_procedure("file-webp-export")
-    
+
     # Export the image as WebP
     image.undo_group_start()
 
@@ -45,7 +50,7 @@ def export_webp_run(procedure, run_mode, image, drawables, config, data):
             "file": gfile,
             "quality": 75,
             "alpha-quality": 75,
-            "include-thumbnail": False,  
+            "include-thumbnail": False,
         }
         prcedure_runner(file_webp_export, file_webp_export_inputs)
     except Exception as e:
