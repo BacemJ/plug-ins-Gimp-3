@@ -10,18 +10,24 @@ from gi.repository import GObject
 from gi.repository import GLib
 from gi.repository import Gtk
 import sys
+from gi.repository import Gio  # Import Gio for GFile
 
 plug_in_proc = "plug-in-export-webp"
-def prcedure_runner(procedure,inputs):
+def prcedure_runner(procedure, inputs):
     config = procedure.create_config()
-    for key, value in inputs.__dict__.items():
+    for key, value in inputs.items():  # Loop through the dictionary directly
         config.set_property(key, value)
     procedure.run(config)
 
 def export_webp_run(procedure, run_mode, image, drawables, config, data):
     
     # Always append ".webp" to the file path
-    file_path = config.get_property('file-path') + ".webp"
+    file_path = config.get_property('file-path')
+    if not file_path:
+        raise ValueError("The 'file-path' property is empty or not set.")
+    file_path += ".webp"
+    # Convert the file path to a GFile object
+    gfile = Gio.File.new_for_path(file_path)
     # Prepare procedures to call
     file_webp_export = Gimp.get_pdb().lookup_procedure("file-webp-export")
     
@@ -29,15 +35,15 @@ def export_webp_run(procedure, run_mode, image, drawables, config, data):
     image.undo_group_start()
 
     try:
-        # Call the file-webp-export procedure using run_procedure_with_values
-        file_webp_export_inputs= {
+        # Call the file-webp-export procedure using the correct property names
+        file_webp_export_inputs = {
             "image": image,
-            "drawable": drawables[0],
-            "filename": file_path,
-            "quality": 75,  # Set quality to 75%
-            "preserve_metadata": False,  # Do not preserve metadata
+            "file": gfile,
+            "quality": 75,
+            "alpha-quality": 75,
+            "include-thumbnail": False,  
         }
-        prcedure_runner(file_webp_export,file_webp_export_inputs)
+        prcedure_runner(file_webp_export, file_webp_export_inputs)
     except Exception as e:
         image.undo_group_end()
         return procedure.new_return_values(Gimp.PDBStatusType.EXECUTION_ERROR,
