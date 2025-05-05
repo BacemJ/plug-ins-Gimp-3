@@ -12,27 +12,32 @@ from gi.repository import Gtk
 import sys
 
 plug_in_proc = "plug-in-export-webp"
+def prcedure_runner(procedure,inputs):
+    config = procedure.create_config()
+    for key, value in inputs.__dict__.items():
+        config.set_property(key, value)
+    procedure.run(config)
 
 def export_webp_run(procedure, run_mode, image, drawables, config, data):
     
     # Always append ".webp" to the file path
     file_path = config.get_property('file-path') + ".webp"
-
+    # Prepare procedures to call
+    file_webp_export = Gimp.get_pdb().lookup_procedure("file-webp-export")
+    
     # Export the image as WebP
     image.undo_group_start()
+
     try:
         # Call the file-webp-export procedure using run_procedure_with_values
-        Gimp.get_pdb().run_procedure_with_values(
-            "file-webp-export",
-            [
-                GObject.Value(Gimp.Image, image),            # The image to export
-                GObject.Value(Gimp.Drawable, drawables[0]),  # The drawable (layer)
-                GObject.Value(GLib.String, file_path),       # File path
-                GObject.Value(GLib.String, file_path),       # Raw file path
-                GObject.Value(GObject.TYPE_INT, 75),         # Quality (0-100)
-                GObject.Value(GObject.TYPE_BOOLEAN, False),  # Save metadata
-            ]
-        )
+        file_webp_export_inputs= {
+            "image": image,
+            "drawable": drawables[0],
+            "filename": file_path,
+            "quality": 75,  # Set quality to 75%
+            "preserve_metadata": False,  # Do not preserve metadata
+        }
+        prcedure_runner(file_webp_export,file_webp_export_inputs)
     except Exception as e:
         image.undo_group_end()
         return procedure.new_return_values(Gimp.PDBStatusType.EXECUTION_ERROR,
