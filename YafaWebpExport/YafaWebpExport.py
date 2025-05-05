@@ -38,6 +38,17 @@ def increment_file_name(file_path):
         counter += 1
 
 def export_webp_run(procedure, run_mode, image, drawables, config, data):
+    # Check if there is a selection in the image
+    selection_bounds = image.get_selection_bounds()
+    has_selection, x, y, width, height = selection_bounds
+
+    if has_selection:
+        # Debug: Print the selection bounds to GIMP's error console
+        Gimp.message(f"Cropping to selection: x={x}, y={y}, width={width}, height={height}")
+        
+        # Crop the image to the selected area
+        image.crop(width, height, x, y)
+
     # Try to get the file path from the active image
     gfile = image.get_file()
     if gfile:
