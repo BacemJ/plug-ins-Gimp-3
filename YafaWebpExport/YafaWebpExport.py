@@ -19,6 +19,24 @@ def prcedure_runner(procedure, inputs):
         config.set_property(key, value)
     procedure.run(config)
 
+def increment_file_name(file_path):
+    """
+    Increment the file name by appending (n) if a file with the same name exists.
+    """
+    gfile = Gio.File.new_for_path(file_path)
+    if not gfile.query_exists(None):
+        return file_path  # Return the original file path if it doesn't exist
+
+    base_name, ext = file_path.rsplit('.', 1)  # Split the file name and extension
+    counter = 1
+
+    while True:
+        new_file_path = f"{base_name}({counter}).{ext}"
+        gfile = Gio.File.new_for_path(new_file_path)
+        if not gfile.query_exists(None):
+            return new_file_path  # Return the new file path if it doesn't exist
+        counter += 1
+
 def export_webp_run(procedure, run_mode, image, drawables, config, data):
     # Try to get the file path from the active image
     gfile = image.get_file()
@@ -28,11 +46,14 @@ def export_webp_run(procedure, run_mode, image, drawables, config, data):
         # If the image does not have an associated file, provide a default path
         file_path = "/tmp/untitled_image"
 
-    # Debug: Print the file path to GIMP's error console
-    Gimp.message(f"File path: {file_path}")
-
     # Always append ".webp" to the file path
     file_path += ".webp"
+
+    # Increment the file name if a file with the same name exists
+    file_path = increment_file_name(file_path)
+
+    # Debug: Print the final file path to GIMP's error console
+    Gimp.message(f"Final file path: {file_path}")
 
     # Convert the file path to a GFile object
     gfile = Gio.File.new_for_path(file_path)
