@@ -23,6 +23,10 @@ def export_webp_run(procedure, run_mode, image, drawables, config, data):
     
     # Always append ".webp" to the file path
     file_path = config.get_property('file-path')
+    
+    # Debug: Print the file path to GIMP's error console
+    Gimp.message(f"File path: {file_path}")
+    
     if not file_path:
         raise ValueError("The 'file-path' property is empty or not set.")
     file_path += ".webp"
