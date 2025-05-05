@@ -14,18 +14,11 @@ import sys
 plug_in_proc = "plug-in-export-webp"
 
 def export_webp_run(procedure, run_mode, image, drawables, config, data):
-    if len(drawables) > 1:
-        return procedure.new_return_values(Gimp.PDBStatusType.CALLING_ERROR,
-                                           GLib.Error(f"Procedure '{plug_in_proc}' works with zero or one layer."))
-    elif len(drawables) == 1:
-        if not isinstance(drawables[0], Gimp.Layer):
-            return procedure.new_return_values(Gimp.PDBStatusType.CALLING_ERROR,
-                                               GLib.Error(f"Procedure '{plug_in_proc}' works with layers only."))
-
+    
     # Get the file path for saving
     file_path = config.get_property('file-path')
-    if not file_path.endswith(".webp"):
-        file_path += ".webp"
+    
+    file_path += ".webp"
 
     # Export the image as WebP
     image.undo_group_start()
@@ -55,9 +48,9 @@ class ExportWebP(Gimp.PlugIn):
                                                 export_webp_run, None)
             procedure.set_sensitivity_mask(Gimp.ProcedureSensitivityMask.DRAWABLE |
                                            Gimp.ProcedureSensitivityMask.NO_DRAWABLES)
-            procedure.set_menu_label("_Export as WebP")
-            procedure.set_attribution("Your Name", "Your Name", "2025")
-            procedure.add_menu_path("<Image>/File/Export As WebP")
+            procedure.set_menu_label("Export as _WebP")
+            procedure.set_attribution("Maktabat yafa", "Bacem Jarraya", "2025")
+            procedure.add_menu_path("<Image>/Yafa/Export As WebP")
             procedure.set_documentation("Export as WebP",
                                          "Exports the image as a WebP file with 75% quality and no metadata.",
                                          None)
