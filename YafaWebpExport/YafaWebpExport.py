@@ -80,18 +80,18 @@ def export_webp_run(procedure, run_mode, image, drawables, config, data):
             prcedure_runner(file_webp_export, file_webp_export_inputs)
         else:
             Gimp.message("There is a selected area")
-            area = Gimp.Image.get_floating_sel(image)
-            new_image = Gimp.Image.new(1, 1, Gimp.ImageType.RGB)
-            Gimp.Image.insert_layer(new_image, area, 0, 0)
-            Gimp.Image.resize_to_layers(new_image)
+            Gimp.Selection.invert(image)
+            drawables[0].edit_clear()
+            image.autocrop()
             file_webp_export_inputs = {
-                "image": new_image,
+                "image": image,
                 "file": gfile,
                 "quality": 75,
                 "alpha-quality": 75,
                 "include-thumbnail": False,
             }
             prcedure_runner(file_webp_export, file_webp_export_inputs)
+            image.undo_group_end()
 
     except Exception as e:
         image.undo_group_end()
