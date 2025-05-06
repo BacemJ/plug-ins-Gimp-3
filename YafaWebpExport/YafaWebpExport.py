@@ -66,31 +66,20 @@ def export_webp_run(procedure, run_mode, image, drawables, config, data):
 
     try:
         # Check if there is a selection in the image
-        selection = image.get_selection()
-        if selection:
-            has_selection, x1, y1, x2, y2 = selection.bounds(image)  # Pass the image as an argument
-            if has_selection:  # Check if there is an active selection
-                width = x2 - x1
-                height = y2 - y1
-                # Debug: Print the selection bounds to GIMP's error console
-                Gimp.message(f"Cropping to selection: x={x1}, y={y1}, width={width}, height={height}")
-                
-                # Crop the image to the selected area
-                image.crop(width, height, x1, y1)
-            else:
-                Gimp.message("No selection found. Exporting the entire image.")
-        else:
-            Gimp.message("No selection object found. Exporting the entire image.")
+        selection = Gimp.Selection.is_empty(image)
 
-        # Call the file-webp-export procedure using the correct property names
-        file_webp_export_inputs = {
-            "image": image,
-            "file": gfile,
-            "quality": 75,
-            "alpha-quality": 75,
-            "include-thumbnail": False,
-        }
-        prcedure_runner(file_webp_export, file_webp_export_inputs)
+        if selection:
+            Gimp.message("No selection object found. Exporting the entire image.")
+            file_webp_export_inputs = {
+                "image": image,
+                "file": gfile,
+                "quality": 75,
+                "alpha-quality": 75,
+                "include-thumbnail": False,
+            }
+            prcedure_runner(file_webp_export, file_webp_export_inputs)
+        else:
+            Gimp.message("There is a selected area")
     except Exception as e:
         image.undo_group_end()
         return procedure.new_return_values(Gimp.PDBStatusType.EXECUTION_ERROR,
