@@ -80,6 +80,17 @@ def export_webp_run(procedure, run_mode, image, drawables, config, data):
             prcedure_runner(file_webp_export, file_webp_export_inputs)
         else:
             Gimp.message("There is a selected area")
+            #area = Gimp.Image.get_selection(image)
+            area = Gimp.Selection.save(image)
+            file_webp_export_inputs = {
+                "image": area,
+                "file": gfile,
+                "quality": 75,
+                "alpha-quality": 75,
+                "include-thumbnail": False,
+            }
+            prcedure_runner(file_webp_export, file_webp_export_inputs)
+
     except Exception as e:
         image.undo_group_end()
         return procedure.new_return_values(Gimp.PDBStatusType.EXECUTION_ERROR,
