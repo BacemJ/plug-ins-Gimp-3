@@ -80,10 +80,12 @@ def export_webp_run(procedure, run_mode, image, drawables, config, data):
             prcedure_runner(file_webp_export, file_webp_export_inputs)
         else:
             Gimp.message("There is a selected area")
-            #area = Gimp.Image.get_selection(image)
-            area = Gimp.Selection.save(image)
+            area = Gimp.Image.get_floating_sel(image)
+            new_image = Gimp.Image.new(1, 1, Gimp.ImageType.RGB)
+            Gimp.Image.insert_layer(new_image, area, 0, 0)
+            Gimp.Image.resize_to_layers(new_image)
             file_webp_export_inputs = {
-                "image": area,
+                "image": new_image,
                 "file": gfile,
                 "quality": 75,
                 "alpha-quality": 75,
