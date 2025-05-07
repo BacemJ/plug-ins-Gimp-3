@@ -36,6 +36,3 @@ Developed by **Maktabat Yafa** - [https://maktabatyafa.tn]
 
 ## Contributions
 Feel free to **fork, modify, and improve** the plugin. Contributions are always welcome!
-```
-
-This should now reflect all your requested updates! Let me know if there's anything else you'd like to tweak. 🚀
