@@ -12,7 +12,7 @@ from gi.repository import GLib
 import sys
 from gi.repository import Gio  # Import Gio for GFile
 
-plug_in_proc = "plug-in-export-webp"
+plug_in_proc = "plug-in-crop-transparent-export-webp"
 def procedure_runner(procedure, inputs):
     config = procedure.create_config()
     for key, value in inputs.items():  # Loop through the dictionary directly
