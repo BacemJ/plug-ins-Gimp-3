@@ -37,7 +37,7 @@ def increment_file_name(file_path):
             return new_file_path  # Return the new file path if it doesn't exist
         counter += 1
 
-def export_webp_run(procedure, run_mode, image, drawables, config, data):
+def crop_export_webp_run(procedure, run_mode, image, drawables, config, data):
     # Try to get the file path from the active image
     gfile = image.get_file()
     if gfile:
@@ -53,7 +53,7 @@ def export_webp_run(procedure, run_mode, image, drawables, config, data):
     file_path = increment_file_name(file_path)
 
     # Debug: Print the final file path to GIMP's error console
-    Gimp.message(f"Final file path: {file_path}")
+    Gimp.message(f"Image will be exported to this destination:\n{file_path}")
 
     # Convert the file path to a GFile object
     gfile = Gio.File.new_for_path(file_path)
@@ -65,45 +65,24 @@ def export_webp_run(procedure, run_mode, image, drawables, config, data):
     image.undo_group_start()
 
     try:
-        # Check if there is a selection in the image
-        selection = Gimp.Selection.is_empty(image)
+        image.autocrop()
+        file_webp_export_inputs = {
+            "image": image,
+            "file": gfile,
+            "quality": 75,
+            "alpha-quality": 75,
+            "include-thumbnail": False,
+            "use-sharp-yuv": True,
+        }
 
-        if selection:
-            Gimp.message("No selection object found. Exporting the entire image.")
-            file_webp_export_inputs = {
-                "image": image,
-                "file": gfile,
-                "quality": 75,
-                "alpha-quality": 75,
-                "include-thumbnail": False,
-                "use-sharp-yuv": True,
-            }
-            prcedure_runner(file_webp_export, file_webp_export_inputs)
-        else:
-            Gimp.message("There is a selected area")
-            Gimp.Selection.invert(image)
-            drawables[0].edit_clear()
-            image.autocrop()
-            file_webp_export_inputs = {
-                "image": image,
-                "file": gfile,
-                "quality": 75,
-                "alpha-quality": 75,
-                "include-thumbnail": False,
-                "use-sharp-yuv": True,
-            }
-            prcedure_runner(file_webp_export, file_webp_export_inputs)
-            image.undo_group_end()
 
     except Exception as e:
-        image.undo_group_end()
         return procedure.new_return_values(Gimp.PDBStatusType.EXECUTION_ERROR,
-                                           GLib.Error(f"Failed to export image: {str(e)}"))
+                                           GLib.Error(f"Failed to export the image:\n{str(e)}"))
     image.undo_group_end()
-
     return procedure.new_return_values(Gimp.PDBStatusType.SUCCESS, None)
 
-class ExportWebP(Gimp.PlugIn):
+class CropExportWebP(Gimp.PlugIn):
     def do_query_procedures(self):
         return [plug_in_proc]
 
@@ -113,14 +92,14 @@ class ExportWebP(Gimp.PlugIn):
         if name == plug_in_proc:
             procedure = Gimp.ImageProcedure.new(self, name,
                                                 Gimp.PDBProcType.PLUGIN,
-                                                export_webp_run, None)
+                                                crop_export_webp_run, None)
             procedure.set_sensitivity_mask(Gimp.ProcedureSensitivityMask.DRAWABLE |
                                            Gimp.ProcedureSensitivityMask.NO_DRAWABLES)
-            procedure.set_menu_label("Export as _WebP")
+            procedure.set_menu_label("_Crop and Export as WebP")
             procedure.set_attribution("Maktabat yafa", "www.maktabatayafa.tn", "2025")
             procedure.add_menu_path("<Image>/Yafa")
-            procedure.set_documentation("Export as WebP",
-                                         "Exports the image as a WebP file with 75% quality and no metadata.",
+            procedure.set_documentation("Crop the image based on transparencey and export it as WebP",
+                                         "Crop the image based on transparencey and export it as WebP at 75% quality",
                                          None)
 
             procedure.add_string_argument("file-path", "File Path", None, "",
@@ -128,4 +107,4 @@ class ExportWebP(Gimp.PlugIn):
 
         return procedure
 
-Gimp.main(ExportWebP.__gtype__, sys.argv)
+Gimp.main(CropExportWebP.__gtype__, sys.argv)
