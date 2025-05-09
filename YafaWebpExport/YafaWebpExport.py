@@ -5,15 +5,15 @@ import gi
 gi.require_version('Gimp', '3.0')
 from gi.repository import Gimp
 gi.require_version('GimpUi', '3.0')
-from gi.repository import GimpUi
+#from gi.repository import GimpUi
 from gi.repository import GObject
 from gi.repository import GLib
-from gi.repository import Gtk
+#from gi.repository import Gtk
 import sys
 from gi.repository import Gio  # Import Gio for GFile
 
 plug_in_proc = "plug-in-export-webp"
-def prcedure_runner(procedure, inputs):
+def procedure_runner(procedure, inputs):
     config = procedure.create_config()
     for key, value in inputs.items():  # Loop through the dictionary directly
         config.set_property(key, value)
@@ -78,7 +78,7 @@ def export_webp_run(procedure, run_mode, image, drawables, config, data):
                 "include-thumbnail": False,
                 "use-sharp-yuv": True,
             }
-            prcedure_runner(file_webp_export, file_webp_export_inputs)
+            procedure_runner(file_webp_export, file_webp_export_inputs)
         else:
             Gimp.message("There is a selected area")
             Gimp.Selection.invert(image)
@@ -92,11 +92,11 @@ def export_webp_run(procedure, run_mode, image, drawables, config, data):
                 "include-thumbnail": False,
                 "use-sharp-yuv": True,
             }
-            prcedure_runner(file_webp_export, file_webp_export_inputs)
-            image.undo_group_end()
+            procedure_runner(file_webp_export, file_webp_export_inputs)
+
 
     except Exception as e:
-        image.undo_group_end()
+
         return procedure.new_return_values(Gimp.PDBStatusType.EXECUTION_ERROR,
                                            GLib.Error(f"Failed to export image: {str(e)}"))
     image.undo_group_end()

@@ -5,15 +5,15 @@ import gi
 gi.require_version('Gimp', '3.0')
 from gi.repository import Gimp
 gi.require_version('GimpUi', '3.0')
-from gi.repository import GimpUi
+#from gi.repository import GimpUi
 from gi.repository import GObject
 from gi.repository import GLib
-from gi.repository import Gtk
+#from gi.repository import Gtk
 import sys
 from gi.repository import Gio  # Import Gio for GFile
 
 plug_in_proc = "plug-in-export-webp"
-def prcedure_runner(procedure, inputs):
+def procedure_runner(procedure, inputs):
     config = procedure.create_config()
     for key, value in inputs.items():  # Loop through the dictionary directly
         config.set_property(key, value)
@@ -74,11 +74,13 @@ def crop_export_webp_run(procedure, run_mode, image, drawables, config, data):
             "include-thumbnail": False,
             "use-sharp-yuv": True,
         }
-
+        # Actually run the export procedure
+        procedure_runner(file_webp_export, file_webp_export_inputs)
 
     except Exception as e:
-        return procedure.new_return_values(Gimp.PDBStatusType.EXECUTION_ERROR,
+                return procedure.new_return_values(Gimp.PDBStatusType.EXECUTION_ERROR,
                                            GLib.Error(f"Failed to export the image:\n{str(e)}"))
+    
     image.undo_group_end()
     return procedure.new_return_values(Gimp.PDBStatusType.SUCCESS, None)
 
