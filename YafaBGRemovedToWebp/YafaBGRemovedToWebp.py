@@ -5,17 +5,16 @@ import gi
 gi.require_version('Gimp', '3.0')
 from gi.repository import Gimp
 gi.require_version('GimpUi', '3.0')
-#from gi.repository import GimpUi
 from gi.repository import GObject
 from gi.repository import GLib
-#from gi.repository import Gtk
 import sys
 from gi.repository import Gio  # Import Gio for GFile
 
 plug_in_proc = "plug-in-crop-transparent-export-webp"
+
 def procedure_runner(procedure, inputs):
     config = procedure.create_config()
-    for key, value in inputs.items():  # Loop through the dictionary directly
+    for key, value in inputs.items():
         config.set_property(key, value)
     procedure.run(config)
 
@@ -39,33 +38,35 @@ def increment_file_name(file_path):
 
 def crop_export_webp_run(procedure, run_mode, image, drawables, config, data):
     # Try to get the file path from the active image
-    gfile = image.get_file()
-    if gfile:
-        file_path = gfile.get_path()
-    else:
-        # If the image does not have an associated file, provide a default path
-        file_path = "/tmp/untitled_image"
-
-    # Always append ".webp" to the file path
-    file_path += ".webp"
-
-    # Increment the file name if a file with the same name exists
-    file_path = increment_file_name(file_path)
-
-    # Debug: Print the final file path to GIMP's error console
-    Gimp.message(f"Image will be exported to this destination:\n{file_path}")
-
-    # Convert the file path to a GFile object
-    gfile = Gio.File.new_for_path(file_path)
-
-    # Prepare procedures to call
-    file_webp_export = Gimp.get_pdb().lookup_procedure("file-webp-export")
-
-    # Export the image as WebP
-    image.undo_group_start()
-
     try:
+        gfile = image.get_file()
+        if gfile:
+            file_path = gfile.get_path()
+        else:
+            # If the image does not have an associated file, provide a default path
+            file_path = "/tmp/untitled_image"
+
+        # Always append ".webp" to the file path
+        file_path += ".webp"
+
+        # Increment the file name if a file with the same name exists
+        file_path = increment_file_name(file_path)
+
+        # Debug: Print the final file path to GIMP's error console
+        Gimp.message(f"Processing image: {image.get_name()}, exporting to: {file_path}")
+
+        # Convert the file path to a GFile object
+        gfile = Gio.File.new_for_path(file_path)
+
+        # Prepare procedures to call
+        file_webp_export = Gimp.get_pdb().lookup_procedure("file-webp-export")
+
+        # Export the image as WebP
+        image.undo_group_start()
+
+        # Autocrop the image
         image.autocrop()
+        
         file_webp_export_inputs = {
             "image": image,
             "file": gfile,
@@ -74,23 +75,31 @@ def crop_export_webp_run(procedure, run_mode, image, drawables, config, data):
             "include-thumbnail": False,
             "use-sharp-yuv": True,
         }
+        
         # Actually run the export procedure
         procedure_runner(file_webp_export, file_webp_export_inputs)
+        
+        # End the undo group
         image.undo_group_end()
-        displayToClose = Gimp.default_display()
-        image.delete() # Close the image
-        Gimp.Display.delete(displayToClose)  # Close the display
+        
+        # Close the image if desired
+        try:
 
-
+            Gimp.Display.delete(Gimp.default_display())
+            Gimp.message("Image closed successfully.")
+        
+            
+        except Exception as display_error:
+            Gimp.message(f"Could not close display: {str(display_error)}")
+        
     except Exception as e:
-                image.undo_group_end()
-                return procedure.new_return_values(Gimp.PDBStatusType.EXECUTION_ERROR,
-                                           GLib.Error(f"Failed to export the image:\n{str(e)}"))
-    
+        image.undo_group_end()
+        return procedure.new_return_values(Gimp.PDBStatusType.EXECUTION_ERROR,
+                                    GLib.Error(f"Failed to export image: {str(e)}"))
     
     return procedure.new_return_values(Gimp.PDBStatusType.SUCCESS, None)
 
-class CropExportWebP(Gimp.PlugIn):
+class ExportWebP(Gimp.PlugIn):
     def do_query_procedures(self):
         return [plug_in_proc]
 
@@ -99,20 +108,16 @@ class CropExportWebP(Gimp.PlugIn):
 
         if name == plug_in_proc:
             procedure = Gimp.ImageProcedure.new(self, name,
-                                                Gimp.PDBProcType.PLUGIN,
-                                                crop_export_webp_run, None)
-            procedure.set_sensitivity_mask(Gimp.ProcedureSensitivityMask.DRAWABLE |
-                                           Gimp.ProcedureSensitivityMask.NO_DRAWABLES)
-            procedure.set_menu_label("_Crop and Export as WebP")
+                                               Gimp.PDBProcType.PLUGIN,
+                                               crop_export_webp_run, None)
+            procedure.set_sensitivity_mask(Gimp.ProcedureSensitivityMask.DRAWABLE)
+            procedure.set_menu_label("2 Walid")
             procedure.set_attribution("Maktabat yafa", "www.maktabatayafa.tn", "2025")
             procedure.add_menu_path("<Image>/Yafa")
-            procedure.set_documentation("Crop the image based on transparencey and export it as WebP",
-                                         "Crop the image based on transparencey and export it as WebP at 75% quality",
-                                         None)
-
-            procedure.add_string_argument("file-path", "File Path", None, "",
-                                          GObject.ParamFlags.READWRITE)
+            procedure.set_documentation("Crop the image based on transparency and export it as WebP",
+                                      "Crop the image based on transparency and export it as WebP at 75% quality",
+                                      None)
 
         return procedure
 
-Gimp.main(CropExportWebP.__gtype__, sys.argv)
+Gimp.main(ExportWebP.__gtype__, sys.argv)
