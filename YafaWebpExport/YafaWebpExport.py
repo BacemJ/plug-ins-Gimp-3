@@ -73,12 +73,18 @@ def export_webp_run(procedure, run_mode, image, drawables, config, data):
             file_webp_export_inputs = {
                 "image": image,
                 "file": gfile,
-                "quality": 75,
-                "alpha-quality": 75,
+                "quality": 100,
+                "alpha-quality": 100,
                 "include-thumbnail": False,
                 "use-sharp-yuv": True,
             }
             procedure_runner(file_webp_export, file_webp_export_inputs)
+            image.undo_group_end()
+            try:
+                Gimp.Display.delete(Gimp.default_display())
+                Gimp.message("Image closed successfully.")
+            except Exception as display_error:
+                Gimp.message(f"Could not close display: {str(display_error)}")
         else:
             Gimp.message("There is a selected area")
             Gimp.Selection.invert(image)
@@ -87,20 +93,24 @@ def export_webp_run(procedure, run_mode, image, drawables, config, data):
             file_webp_export_inputs = {
                 "image": image,
                 "file": gfile,
-                "quality": 75,
-                "alpha-quality": 75,
+                "quality": 100,
+                "alpha-quality": 100,
                 "include-thumbnail": False,
                 "use-sharp-yuv": True,
             }
             procedure_runner(file_webp_export, file_webp_export_inputs)
+            image.undo_group_end()
+            try:
+                Gimp.Display.delete(Gimp.default_display())
+                Gimp.message("Image closed successfully.")
+            except Exception as display_error:
+                Gimp.message(f"Could not close display: {str(display_error)}")
 
 
     except Exception as e:
-
+        image.undo_group_end()
         return procedure.new_return_values(Gimp.PDBStatusType.EXECUTION_ERROR,
                                            GLib.Error(f"Failed to export image: {str(e)}"))
-    image.undo_group_end()
-
     return procedure.new_return_values(Gimp.PDBStatusType.SUCCESS, None)
 
 class ExportWebP(Gimp.PlugIn):
@@ -116,11 +126,11 @@ class ExportWebP(Gimp.PlugIn):
                                                 export_webp_run, None)
             procedure.set_sensitivity_mask(Gimp.ProcedureSensitivityMask.DRAWABLE |
                                            Gimp.ProcedureSensitivityMask.NO_DRAWABLES)
-            procedure.set_menu_label("Export as _WebP")
+            procedure.set_menu_label("1 Walid")
             procedure.set_attribution("Maktabat yafa", "www.maktabatayafa.tn", "2025")
             procedure.add_menu_path("<Image>/Yafa")
-            procedure.set_documentation("Export as WebP",
-                                         "Exports the image as a WebP file with 75% quality and no metadata.",
+            procedure.set_documentation("Prepare the image for PhotoRoom",
+                                         "Exports the image as a WebP file with 100% quality and no metadata.",
                                          None)
 
             procedure.add_string_argument("file-path", "File Path", None, "",
