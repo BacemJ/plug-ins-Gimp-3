@@ -76,12 +76,18 @@ def crop_export_webp_run(procedure, run_mode, image, drawables, config, data):
         }
         # Actually run the export procedure
         procedure_runner(file_webp_export, file_webp_export_inputs)
+        image.undo_group_end()
+        displayToClose = Gimp.default_display()
+        image.delete() # Close the image
+        Gimp.Display.delete(displayToClose)  # Close the display
+
 
     except Exception as e:
+                image.undo_group_end()
                 return procedure.new_return_values(Gimp.PDBStatusType.EXECUTION_ERROR,
                                            GLib.Error(f"Failed to export the image:\n{str(e)}"))
     
-    image.undo_group_end()
+    
     return procedure.new_return_values(Gimp.PDBStatusType.SUCCESS, None)
 
 class CropExportWebP(Gimp.PlugIn):
